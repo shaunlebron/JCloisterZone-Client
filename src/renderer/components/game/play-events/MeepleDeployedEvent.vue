@@ -30,21 +30,47 @@ export default {
 
   computed: mapGetters({
     tileOn: 'game/tileOn',
+    featureOn: 'game/featureOn',
     colorCssClass: 'game/colorCssClass'
   }),
 
   methods: {
-    onMouseEnter () {
+    showFeature (feature) {
+      const places = feature.places.map(p => {
+        return {
+          tile: this.tileOn(p),
+          feature: feature.type,
+          location: p[2]
+        }
+      })
       this.$store.dispatch('board/showLayer', {
         layer: 'EmphasizeLayer',
         props: {
           emphasis: {
-            type: 'meeple',
-            barn: this.ev.meeple === 'Barn',
-            ...this.ev.to
+            type: 'feature',
+            places
           }
         }
       })
+    },
+
+    onMouseEnter () {
+      const { to } = this.ev
+      const feature = this.featureOn(to)
+      if (feature) {
+        this.showFeature(feature)
+      } else {
+        this.$store.dispatch('board/showLayer', {
+          layer: 'EmphasizeLayer',
+          props: {
+            emphasis: {
+              type: 'meeple',
+              barn: this.ev.meeple === 'Barn',
+              ...this.ev.to
+            }
+          }
+        })
+      }
     },
 
     onMouseLeave () {

@@ -44,7 +44,7 @@
           :width="MEEPLE_SIZE"
           :height="MEEPLE_SIZE"
           :href="`${MEEPLES_SVG}#${svgMeepleId(meeple)}`"
-          @mouseenter="onMouseOver(meeple.selectable)"
+          @mouseenter="onMouseOver(meeple)"
           @mouseleave="onMouseLeave()"
           @click="ev => onSelect(ev, meeple.selectable)"
         />
@@ -202,7 +202,9 @@ export default {
     }),
 
     ...mapGetters({
-      isDeployedOnBridge: 'game/isDeployedOnBridge'
+      isDeployedOnBridge: 'game/isDeployedOnBridge',
+      tileOn: 'game/tileOn',
+      featureOn: 'game/featureOn',
     }),
 
     barns () {
@@ -341,8 +343,31 @@ export default {
     },
 
     // methods related to meeple select
+    showFeature (feature) {
+      const places = feature.places.map(p => {
+        return {
+          tile: this.tileOn(p),
+          feature: feature.type,
+          location: p[2]
+        }
+      })
+      this.$store.dispatch('board/showLayer', {
+        layer: 'EmphasizeLayer',
+        props: {
+          emphasis: {
+            type: 'feature',
+            places
+          }
+        }
+      })
+    },
 
-    onMouseOver (opt) {
+    onMouseOver (meeple) {
+      const {opt} = meeple
+      const feature = this.featureOn(meeple)
+      if (feature) {
+        this.showFeature(feature)
+      }
       if (opt) {
         this.mouseOver = opt
       }
@@ -350,6 +375,7 @@ export default {
 
     onMouseLeave () {
       this.mouseOver = null
+      this.$store.dispatch('board/hideLayerDebounced', { layer: 'EmphasizeLayer' })
     },
 
     onSelect (ev, opt) {
